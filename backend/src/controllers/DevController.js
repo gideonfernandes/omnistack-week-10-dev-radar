@@ -8,6 +8,7 @@ module.exports = {
 
     return response.json(devs);
   },
+
   async store(request, response) {
     const { github_username, techs, lat, lng } = request.body;
   
@@ -42,5 +43,34 @@ module.exports = {
     };
 
     return response.json(dev);
+  },
+
+  async update(request, response) {
+    const { user_id } = request.params;
+    const { name, bio, techs } = request.body;
+
+    const updatedData = {};
+    if (name) updatedData.name = name;
+    if (bio) updatedData.bio = bio;
+    if (techs) {
+      const techsArray = parseStringAsArray(techs);
+      updatedData.techs = techsArray;
+    };
+
+    const dev = await Dev.findOneAndUpdate(
+      { _id: user_id },
+      updatedData, 
+      { new: true }
+    );
+
+    return response.json(dev);
+  },
+
+  async destroy(request, response) {
+    const { user_id } = request.params;
+
+    await Dev.findByIdAndRemove(user_id);
+
+    return response.json({ message: 'Dev deleted.' });
   }
 };
