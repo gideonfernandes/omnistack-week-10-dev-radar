@@ -1,33 +1,104 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import api from './services/api';
 import './global.css';
 import './App.css';
 import './Sidebar.css';
 import './Main.css';
 
 function App() {
+  const [devs, setDevs] = useState([]);
+
+  const [githubUsername, setGithubUsername] = useState('');
+  const [techs, setTechs] = useState('');
+  const [lat, setLat] = useState('');
+  const [lng, setLng] = useState('');
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setLat(latitude);
+        setLng(longitude);
+      },
+      (error) => {
+        console.error(error.message);
+      },
+      {
+        timeout: 30000
+      }
+    );
+  }, []);
+
+  useEffect(() => {
+    const loadDevs = async () => {
+      const response = await api.get('/devs');
+      setDevs(response.data);
+    };
+
+    loadDevs();
+  }, []);
+
+  const handleAddDev = async e => {
+    e.preventDefault();
+
+    const response = await api.post('/devs', {
+      github_username: githubUsername,
+      techs,
+      lat,
+      lng
+    });
+
+    setGithubUsername('');
+    setTechs('');
+
+    setDevs(
+      [...devs.filter(dev => dev._id !== response.data._id), response.data]
+    );
+  };
+
   return (
     <div id="app">
       <aside>
         <strong>Cadastrar Dev</strong>
-        <form>
+        <form onSubmit={handleAddDev}>
           <div className="input-block">
             <label htmlFor="github_username">Usuário do Github</label>
-            <input type="text" name="github_username" required />
+            <input
+              type="text"
+              name="github_username"
+              value={githubUsername}
+              onChange={e => setGithubUsername(e.target.value)}
+            />
           </div>
 
           <div className="input-block">
             <label htmlFor="techs">Tecnologias</label>
-            <input type="text" name="techs" required />
+            <input
+              type="text"
+              name="techs"
+              value={techs}
+              onChange={e => setTechs(e.target.value)}
+            />
           </div>
 
           <div className="input-group">
             <div className="input-block">
               <label htmlFor="lat">Latitude</label>
-              <input type="text" name="lat" required />
+              <input
+                type="text"
+                name="lat"
+                value={lat}
+                onChange={e => setLat(Number(e.target.value))}
+              />
             </div>
             <div className="input-block">
               <label htmlFor="lng">Longitude</label>
-              <input type="text" name="lng" required />
+              <input
+                type="text"
+                name="lng"
+                value={lng}
+                onChange={e => setLng(Number(e.target.value))}
+              />
             </div>
           </div>
 
@@ -37,65 +108,26 @@ function App() {
 
       <main>
         <ul>
-          <li className="dev-item">
-            <header>
-              <img
-                src="https://avatars2.githubusercontent.com/u/62628971?s=460&u=036a1db7ec264e09b40c15e441a2d684bc6fcc60&v=4"
-                alt="Gideon Fernandes"
-              />
-              <div className="user-info">
-                <strong>Gideon Fernandes</strong>
-                <span>NodeJS, ReactJS, React Native</span>
-              </div>
-            </header>
-            <p>I'm a Full Stack Web and Mobile developer with a focus on NodeJS, React and React Native technologies, willing to learn and face new challenges!</p>
-            <a href="https://github.com/gideonfernandes">Acessar perfil no Github</a>
-          </li>
-
-          <li className="dev-item">
-            <header>
-              <img
-                src="https://avatars2.githubusercontent.com/u/62628971?s=460&u=036a1db7ec264e09b40c15e441a2d684bc6fcc60&v=4"
-                alt="Gideon Fernandes"
-              />
-              <div className="user-info">
-                <strong>Gideon Fernandes</strong>
-                <span>NodeJS, ReactJS, React Native</span>
-              </div>
-            </header>
-            <p>I'm a Full Stack Web and Mobile developer with a focus on NodeJS, React and React Native technologies, willing to learn and face new challenges!</p>
-            <a href="https://github.com/gideonfernandes">Acessar perfil no Github</a>
-          </li>
-
-          <li className="dev-item">
-            <header>
-              <img
-                src="https://avatars2.githubusercontent.com/u/62628971?s=460&u=036a1db7ec264e09b40c15e441a2d684bc6fcc60&v=4"
-                alt="Gideon Fernandes"
-              />
-              <div className="user-info">
-                <strong>Gideon Fernandes</strong>
-                <span>NodeJS, ReactJS, React Native</span>
-              </div>
-            </header>
-            <p>I'm a Full Stack Web and Mobile developer with a focus on NodeJS, React and React Native technologies, willing to learn and face new challenges!</p>
-            <a href="https://github.com/gideonfernandes">Acessar perfil no Github</a>
-          </li>
-
-          <li className="dev-item">
-            <header>
-              <img
-                src="https://avatars2.githubusercontent.com/u/62628971?s=460&u=036a1db7ec264e09b40c15e441a2d684bc6fcc60&v=4"
-                alt="Gideon Fernandes"
-              />
-              <div className="user-info">
-                <strong>Gideon Fernandes</strong>
-                <span>NodeJS, ReactJS, React Native</span>
-              </div>
-            </header>
-            <p>I'm a Full Stack Web and Mobile developer with a focus on NodeJS, React and React Native technologies, willing to learn and face new challenges!</p>
-            <a href="https://github.com/gideonfernandes">Acessar perfil no Github</a>
-          </li>
+          {devs.map(dev => (
+            <li key={dev._id} className="dev-item">
+              <header>
+                <img
+                  src={dev.avatar_url}
+                  alt={dev.name}
+                />
+                <div className="user-info">
+                  <strong>{dev.name}</strong>
+                  <span>{dev.techs.join(', ')}</span>
+                </div>
+              </header>
+              <p>{dev.bio}</p>
+              <a
+                href={`https://github.com/${dev.github_username}`}
+              >
+                Acessar perfil no Github
+              </a>
+            </li>
+          ))}
         </ul>
       </main>
     </div>
