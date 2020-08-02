@@ -1,17 +1,17 @@
 const express = require('express');
 const connectDB = require('../config/db');
+const routes = require('./routes');
 
 const app = express();
 
 // Connect MongoDB
 connectDB();
 
-// Initi Middleware
+// Init JSON body middleware
 app.use(express.json({ extended: false }));
 
-app.get('/', (request, response) => {
-  return response.json({ message: 'Hello World!' });
-});
+// Init routes middleware
+app.use(routes);
 
 const PORT = process.env.PORT || 8888;
 
