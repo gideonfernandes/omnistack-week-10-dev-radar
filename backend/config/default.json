@@ -1,0 +1,3 @@
+{
+  "mongoURI": "mongodb+srv://omnistack:omnistack@omnistack-weeks.aiqhn.mongodb.net/omnistack-week-10-dev-radar?retryWrites=true&w=majority"
+}
